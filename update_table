@@ -12,8 +12,8 @@ while read line; do
   fill=$(echo $line | awk '{print $1}')
   for i in {47,56,64,73,81,90,98,107,115,124,132,141}; do
     cutstr=$(echo "$linemod" | cut -c${i})
-    echo "$linemod"
-    echo "$i=\"${cutstr}\""
+    #echo "$linemod"
+    #echo "$i=\"${cutstr}\""
     if [ "$cutstr" == " " ]; then
       linemod="$(echo "$linemod" | sed s/./0/${i})"
     fi
