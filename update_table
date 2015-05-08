@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# download new table
+curl "http://www.phy.bnl.gov/cnipol/fills/?rp=15&fn=&ft=&be=&mode=11&sb=Select" > htmlfile
+cat htmlfile | grep +- | sed 's/^     //g' > polarimetry.csv.tmp
+rm htmlfile
+
+# put zeroes in where we have blank data
+> polarimetry.csv
+while read line; do
+  linemod="$line"
+  fill=$(echo $line | awk '{print $1}')
+  for i in {47,56,64,73,81,90,98,107,115,124,132,141}; do
+    cutstr=$(echo "$linemod" | cut -c${i})
+    echo "$linemod"
+    echo "$i=\"${cutstr}\""
+    if [ "$cutstr" == " " ]; then
+      linemod="$(echo "$linemod" | sed s/./0/${i})"
+    fi
+  done
+  if [ $fill -gt 18953 ]; then
+    linemod="${linemod}    0    +-  0       0    +-  0       0    +-  0   "
+  fi
+  echo $linemod | awk '{print $1}'
+  echo "$linemod" >> polarimetry.csv
+done < polarimetry.csv.tmp
+
+echo "please check vimdiff to see if zeroes were placed correctly, starting in 3 seconds..."
+sleep 3
+vimdiff polarimetry.csv{,.tmp}
+
+# remove "+-" symbols
+cat polarimetry.csv | sed 's/+-//g' | column -t > polarimetry.dat
+
+# make a tree
+root -b -q mkTree.C
